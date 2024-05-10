@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
@@ -21,3 +22,54 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+=======
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Django
+*.log
+*.pot
+*.pyc
+db.sqlite3-journal
+media/
+
+# Secret key
+secret.key
+
+# Development/Build files
+*.pyo
+*.pyd
+*.db
+*.pid
+*.coverage
+htmlcov/
+.coverage
+.coverage.*
+.cache
+.tox
+.vscode/
+*.db-shm
+*.db-wal
+*.idea/
+*.bak
+*.swp
+*.sql
+__pycache__/
+.Python
+.mypy_cache/
+yarn-error.log
+.idea/
+.pytest_cache/
+.mypy_cache/
+.cache/
+.pytest_cache/
+pip-wheel-metadata/
+dist/
+build/
+*.egg-info/
+*.egg
+*.sqlite-journal
+``
+>>>>>>> 776327eeece2757b2ea7d0e2d268540f9839ce5d
