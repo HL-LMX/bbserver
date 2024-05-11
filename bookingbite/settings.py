@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 from pathlib import Path
-from dotenv import load_dotenv
+from dotenv import load_dotenv, dotenv_values
 import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -28,12 +28,15 @@ load_dotenv(env_path)
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'default_secret_key')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DJANGO_DEBUG', '') != 'False'
-# ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS').split(' ')
-
 # DEBUG = False
-# ALLOWED_HOSTS = ['localhost','server ip']
-ALLOWED_HOSTS = []
+DEBUG = bool(os.environ.get('DJANGO_DEBUG', 'False'))
+
+
+
+# ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.getenv('SERVERNAMES').split(',')
+
+print("\n\n", ALLOWED_HOSTS,"\n\n")
 
 # Application definition
 
