@@ -1,0 +1,42 @@
+/* Calendar.css */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  
+  .calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+  }
+  
+  .day {
+    text-align: center;
+    padding: 5px;
+    font-weight: bold;
+  }
+  
+  .cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #ddd;
+    height: 2em;
+    width: 2em;
+    cursor: pointer;
+  }
+  
+  .cell.blank-cell {
+    background-color: #f5f5f5;
+  }
+  
+  .cell.today {
+    background-color: #e0f7fa; /* Light blue for today */
+  }
+  
+  .cell.selected {
+    background-color: #81c784; /* Light green for selected date */
+  }
+  

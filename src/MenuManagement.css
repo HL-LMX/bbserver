@@ -1,0 +1,40 @@
+/* MenuManagement.css */
+
+/* Adjust the grid layout to display sections in a 3 by 2 grid by default */
+.menu-sections {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	grid-template-rows: repeat(2, 1fr);
+	grid-gap: 20px;
+	margin: 0 2rem;
+}
+
+
+/* Define a media query for a smaller width */
+@media (max-width: 1200px) {
+	/* Adjust the grid layout to display sections in a 2-column layout */
+	.menu-sections {
+	grid-template-columns: repeat(2, 1fr);
+	/* grid-template-rows: auto; */
+	}
+}
+
+/* Define a media query for a smaller width */
+@media (max-width: 800px) {
+	/* Adjust the grid layout to display sections in a 1-column layout */
+	.menu-sections {
+	grid-template-columns: 1fr;
+	/* grid-template-rows: auto; */
+	}
+}
+	
+.mm-btn {
+    padding: 0 20px;
+    font-size: 1em;
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.4s ease, box-shadow 0.4s ease; /* Include box-shadow in transition */
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.5); /* Shadow below by default */
+}
