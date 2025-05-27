@@ -10,6 +10,7 @@ from .serializers import DishSerializer, DateHasDishSerializer
 from django.utils import timezone
 from datetime import datetime
 from django.views.decorators.http import require_http_methods
+from django.views.decorators.cache import never_cache
 
 
 
@@ -63,7 +64,7 @@ def create_dish(request):
         return JsonResponse({'error': dish_serializer.errors}, status=400)
 
 
-
+@never_cache
 @csrf_exempt
 def get_day_dishes(request, date_str=None):
     """

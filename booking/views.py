@@ -12,6 +12,7 @@ from datetime import datetime
 from django.db.models import Q, F
 from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
+from django.views.decorators.cache import never_cache
 
 
 
@@ -62,7 +63,7 @@ from django.core.exceptions import ObjectDoesNotExist
 
 #     return JsonResponse({'dishes': dishes_info})
 
-
+@never_cache
 def get_week_dishes(request):
     """
     Retrieve dishes for the week containing the date provided via query parameter, e.g.:
