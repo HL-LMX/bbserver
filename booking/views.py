@@ -12,6 +12,8 @@ from datetime import datetime
 from django.db.models import Q, F
 from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
+from django.views.decorators.cache import never_cache
+
 
 
 

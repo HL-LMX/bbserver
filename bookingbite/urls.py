@@ -31,6 +31,6 @@ urlpatterns = [
 # Serve static files during development
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
-    urlpatterns += [
-        path('', TemplateView.as_view(template_name='index.html')),
-    ]
+    # urlpatterns += [
+    #     path('', TemplateView.as_view(template_name='index.html')),
+    # ]

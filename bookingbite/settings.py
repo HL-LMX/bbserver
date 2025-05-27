@@ -18,8 +18,11 @@ import os
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Support env variables from .env file if defined
-env_path = load_dotenv(os.path.join(BASE_DIR, '.env'))
-load_dotenv(env_path)
+
+load_dotenv(os.path.join(BASE_DIR, '.env'))
+# env_path = load_dotenv(os.path.join(BASE_DIR, '.env'))
+# load_dotenv(env_path)
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
@@ -28,10 +31,11 @@ load_dotenv(env_path)
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'default_secret_key')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-# DEBUG = False
-DEBUG = bool(os.environ.get('DJANGO_DEBUG', 'False'))
+DEBUG = False
+# DEBUG = bool(os.environ.get('DJANGO_DEBUG', 'False'))
 
 
+# print("DEBUG ENV VAR TEST - SERVERNAMES =", os.getenv('SERVERNAMES'))
 
 # ALLOWED_HOSTS = []
 ALLOWED_HOSTS = os.getenv('SERVERNAMES').split(',')
@@ -54,7 +58,11 @@ INSTALLED_APPS = [
     'booking.apps.BookingConfig'
 ]
 
-CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOWED_ORIGINS = [
+    "http://194.9.161.245",        # root site
+]
+CORS_ORIGIN_ALLOW_ALL = False
+
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
@@ -141,3 +149,4 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+APPEND_SLASH = True
