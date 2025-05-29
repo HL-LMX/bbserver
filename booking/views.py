@@ -45,7 +45,7 @@ def get_week_dishes(request):
     start_date = current_date - timezone.timedelta(days=monday_offset)
     end_date = start_date + timezone.timedelta(days=4)  # Monday + 4 days = Friday
 
-    # Debug info (optional)
+    # Debug info
     print("\n\nDebugging Info:")
     print(f"Current Date Param: {date_str}")
     print(f"Start Date (Monday): {start_date}, End Date (Friday): {end_date}")
@@ -59,18 +59,28 @@ def get_week_dishes(request):
     print(f"Number of DateHasDish instances: {len(date_has_dishes)}\n")
 
     dishes_info = []
-    for date_has_dish in date_has_dishes:
+    
+    
+    
+    for dhd in date_has_dishes:
         try:
-            date_saved = date_has_dish.date_saved  # The DateSaved instance
-            dish_serializer_data = DishSerializer(date_has_dish.dish_id).data
-            date_saved_string = date_saved.date_saved.strftime("%Y-%m-%d")
+            # Base dish data
+            dish_data = DishSerializer(dhd.dish_id).data
+            # Format date string
+            date_str = dhd.date_saved.date_saved.strftime("%Y-%m-%d")
 
+            # Append all relevant fields, including rating aggregates
             dishes_info.append({
-                'dish': dish_serializer_data,
-                'date': date_saved_string
+                'date_has_dish_id': dhd.pk,
+                'dish': dish_data,
+                'date': date_str,
+                'quantity': dhd.quantity,
+                'rating_sum': dhd.rating_sum,
+                'rating_count': dhd.rating_count,
+                'average_rating': dhd.average_rating,
             })
         except ObjectDoesNotExist:
-            print(f"No DateSaved found for DateHasDish ID: {date_has_dish.dish_id}")
+            print(f"No DateSaved found for DateHasDish ID: {dhd.dish_id}")
 
     return JsonResponse({'dishes': dishes_info})
 
@@ -285,6 +295,7 @@ class RateDishView(APIView):
         serializer = DateHasDishSerializer(dhd)
         return Response(serializer.data)
 
+
     def post(self, request):
         dhd_id = request.data.get('date_has_dish_id')
         rating = request.data.get('rating')
@@ -314,7 +325,6 @@ class RateDishView(APIView):
         dhd.refresh_from_db()
         serializer = DateHasDishSerializer(dhd)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
 
 
     def put(self, request):
@@ -359,7 +369,6 @@ class RateDishView(APIView):
         dhd.refresh_from_db()
         serializer = DateHasDishSerializer(dhd)
         return Response(serializer.data, status=status.HTTP_200_OK)
-    
     
     
     def delete(self, request):
