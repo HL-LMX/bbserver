@@ -80,7 +80,7 @@ def get_week_dishes(request):
                 'average_rating': dhd.average_rating,
             })
         except ObjectDoesNotExist:
-            print(f"No DateSaved found for DateHasDish ID: {dhd.dish_id}")
+            print(f"No DateSaved found for DateHasDish ID: {dhd.pk}")
 
     return JsonResponse({'dishes': dishes_info})
 
