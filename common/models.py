@@ -30,6 +30,18 @@ class DateHasDish(models.Model):
     dish_id = models.ForeignKey('Dish', on_delete=models.CASCADE, db_column='dish_id')
     quantity = models.IntegerField(null=True)
     
+    rating_sum = models.PositiveIntegerField(default=0)
+    rating_count = models.PositiveIntegerField(default=0)
+    
+    
+    @property
+    def average_rating(self):
+        """
+        Returns the average star rating (float), or None if there are no ratings.
+        """
+        if self.rating_count == 0:
+            return None
+        return self.rating_sum / self.rating_count
+    
     class Meta:
         db_table = 'date_has_dish'
-
