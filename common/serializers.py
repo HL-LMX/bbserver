@@ -1,7 +1,7 @@
 # bookingbite/common/serializers.py
 
 from rest_framework import serializers
-from chef_management.models import DateSaved, DateHasDish, Dish
+from common.models import DateSaved, DateHasDish, Dish
 
 class DateSerializer(serializers.ModelSerializer):
     class Meta:

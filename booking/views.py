@@ -6,8 +6,8 @@ from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
 
-from .models import Dish, DateSaved, DateHasDish
-from .serializers import DishSerializer, DateHasDishSerializer
+from common.models import Dish, DateSaved, DateHasDish
+from common.serializers import DishSerializer, DateHasDishSerializer
 from datetime import datetime
 from django.db.models import Q, F
 from django.utils import timezone

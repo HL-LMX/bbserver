@@ -5,8 +5,8 @@ from django.http import JsonResponse, HttpResponseBadRequest
 from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
 
-from .models import Dish, DateSaved, DateHasDish
-from .serializers import DishSerializer, DateHasDishSerializer
+from common.models import Dish, DateSaved, DateHasDish
+from common.serializers import DishSerializer, DateHasDishSerializer
 from django.utils import timezone
 from datetime import datetime
 from django.views.decorators.http import require_http_methods
