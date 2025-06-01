@@ -14,29 +14,16 @@ from django.views.decorators.http import require_http_methods, require_GET
 @require_GET
 def search_dishes(request):
     """
-    Search existing Dish entries by name _and_ dish_type (category).
-    GET params:
-      - q=<partial_name>          (required, non‐empty string)
-      - category=<dish_type>      (optional, but if provided we only return that type)
-    Returns JSON: { "results": [ {dish_id, dish_name, dish_calories, light_healthy, sugar_free, dish_type, …}, … ] }
+    Search existing Dish entries by name (or other fields if desired).
+    Query string: ?q=<partial_name>
+    Returns a JSON array of matching dishes (dish_id, dish_name, dish_calories, light_healthy, sugar_free, etc.).
     """
     q = request.GET.get('q', '').strip()
     if not q:
         return JsonResponse({'results': []})
-
-    # If the frontend passed ?category=Soup (for example), pick it up:
-    category = request.GET.get('category', '').strip()
-
-    # Build a base QuerySet that looks for q in dish_name (case‐insensitive):
-    base_qs = Dish.objects.filter(dish_name__icontains=q)
-
-    # If category was given and non‐empty, narrow to that type exactly (case‐insensitive)
-    if category:
-        base_qs = base_qs.filter(dish_type__iexact=category)
-
-    # Limit to first 10 matches
-    matches = base_qs.order_by('dish_name')[:10]
-
+    
+    # Example: case-insensitive name search (you can extend Q to more fields if needed)
+    matches = Dish.objects.filter(dish_name__icontains=q)[:10]
     serializer = DishSerializer(matches, many=True)
     return JsonResponse({'results': serializer.data})
 
@@ -79,8 +66,12 @@ def create_dish(request):
         else:
             dish_data = data.get('dish', {})
             dish_serializer = DishSerializer(data=dish_data)
+            
+            # print('Serializer Errors:', dish_serializer.errors)
+            
             if not dish_serializer.is_valid():
                 return JsonResponse({'error': dish_serializer.errors}, status=400)
+            
             dish_instance = dish_serializer.save()
 
         # Now, link to dates (if any)
