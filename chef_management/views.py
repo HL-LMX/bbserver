@@ -5,13 +5,36 @@ from django.http import JsonResponse, HttpResponseBadRequest
 from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
 
-from .models import Dish, DateSaved, DateHasDish
-from .serializers import DishSerializer, DateHasDishSerializer
+from common.models import Dish, DateSaved, DateHasDish
+from common.serializers import DishSerializer, DateHasDishSerializer
 from django.utils import timezone
 from datetime import datetime
-from django.views.decorators.http import require_http_methods
+from django.views.decorators.http import require_http_methods, require_GET
 
+@require_GET
+def search_dishes(request):
+    """
+    Search existing Dish entries by name (or other fields if desired).
+    Query string: ?q=<partial_name>
+    Returns a JSON array of matching dishes (dish_id, dish_name, dish_calories, light_healthy, sugar_free, etc.).
+    """
+    q = request.GET.get('q', '').strip()
+    if not q:
+        return JsonResponse({'results': []})
+    # Read the `category` query‐param (may be empty)
+    category = request.GET.get('category', '').strip()
+    # Example: case-insensitive name search (you can extend Q to more fields if needed)
+    if category:
+       # Only return dishes whose name contains q AND whose type matches exactly
+       matches = Dish.objects.filter(
+           dish_name__icontains=q,
+           dish_type__iexact=category
+       )[:10]
+    else:
+       matches = Dish.objects.filter(dish_name__icontains=q)[:10]
 
+    serializer = DishSerializer(matches, many=True)
+    return JsonResponse({'results': serializer.data})
 
 @csrf_exempt
 def create_dish(request):
@@ -37,30 +60,49 @@ def create_dish(request):
         "dates": ["YYYY-MM-DD", ...]  // List of date strings to assign the dish (optional)
         }
     """
-    data = json.loads(request.body)
+    try:
+        data = json.loads(request.body)
 
-    # Create Dish
-    dish_data = data.get('dish', {})
-    dish_serializer = DishSerializer(data=dish_data)
+        # Case A: Reuse existing dish
+        if 'existing_dish_id' in data:
+            dish_id = data['existing_dish_id']
+            try:
+                dish_instance = Dish.objects.get(pk=dish_id)
+            except Dish.DoesNotExist:
+                return JsonResponse({'error': f'Dish with ID {dish_id} not found.'}, status=404)
+        
+        # Case B: Create a brand-new dish
+        else:
+            dish_data = data.get('dish', {})
+            dish_serializer = DishSerializer(data=dish_data)
+            
+            # print('Serializer Errors:', dish_serializer.errors)
+            
+            if not dish_serializer.is_valid():
+                return JsonResponse({'error': dish_serializer.errors}, status=400)
+            
+            dish_instance = dish_serializer.save()
 
-    if dish_serializer.is_valid():
-        # Save the dish instance
-        dish_instance = dish_serializer.save()
+        # Now, link to dates (if any)
+        if 'dates' in data and isinstance(data['dates'], list):
+            for date_str in data['dates']:
+                date_instance, _ = DateSaved.objects.get_or_create(
+                    date_saved=date_str,
+                    defaults={'attendance': 0}
+                )
+                # Avoid duplicate DateHasDish entries for same dish + date
+                DateHasDish.objects.get_or_create(
+                    date_saved=date_instance,
+                    dish_id=dish_instance,
+                    defaults={'quantity': None}
+                )
 
-        # Check if dates are provided
-        if 'dates' in data:
-            dates = data['dates']
-            for date_str in dates:
-                # Get or create the DateSaved instance
-                date_instance, created = DateSaved.objects.get_or_create(date_saved=date_str, defaults={'attendance': 0})
-
-
-                # Create a new row in date_has_dish table
-                DateHasDish.objects.create(date_saved=date_instance, dish_id=dish_instance, quantity=None)
-
-        return JsonResponse({'message': 'Dish created successfully'}, status=201)
-    else:
-        return JsonResponse({'error': dish_serializer.errors}, status=400)
+        return JsonResponse({'message': 'Dish linked successfully'}, status=201)
+    
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON payload.'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
 
 
 

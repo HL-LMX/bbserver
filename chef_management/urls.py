@@ -9,6 +9,6 @@ urlpatterns = [
     path('day-dishes/', views.get_day_dishes, name='day_dishes'),
     path('day-dishes/<str:date_str>/', views.get_day_dishes, name='day_dishes_specific'),
     path('delete-dish-from-date/', views.delete_dish_from_date, name='delete_dish_from_date'),
-
+    path('search-dishes/', views.search_dishes, name='search_dishes'),
 ]
 

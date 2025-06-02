@@ -1,3 +1,5 @@
+# ./bookingbite/wsgi.py
+
 """
 WSGI config for bookingbite project.
 
