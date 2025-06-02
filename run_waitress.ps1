@@ -1,3 +1,4 @@
+# deployments/bbserver/run_waitress.ps1
 # PowerShell script to run Django via Waitress
 $env:DJANGO_SETTINGS_MODULE = "bookingbite.settings"
 $env:SERVERNAMES = "localhost,127.0.0.1,194.9.161.245"
