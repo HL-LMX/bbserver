@@ -21,9 +21,18 @@ def search_dishes(request):
     q = request.GET.get('q', '').strip()
     if not q:
         return JsonResponse({'results': []})
-    
+    # Read the `category` query‐param (may be empty)
+    category = request.GET.get('category', '').strip()
     # Example: case-insensitive name search (you can extend Q to more fields if needed)
-    matches = Dish.objects.filter(dish_name__icontains=q)[:10]
+    if category:
+       # Only return dishes whose name contains q AND whose type matches exactly
+       matches = Dish.objects.filter(
+           dish_name__icontains=q,
+           dish_type__iexact=category
+       )[:10]
+    else:
+       matches = Dish.objects.filter(dish_name__icontains=q)[:10]
+
     serializer = DishSerializer(matches, many=True)
     return JsonResponse({'results': serializer.data})
 
