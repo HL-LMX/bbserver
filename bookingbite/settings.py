@@ -30,19 +30,28 @@ load_dotenv(os.path.join(BASE_DIR, '.env'))
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'default_secret_key')
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
-# DEBUG = bool(os.environ.get('DJANGO_DEBUG', 'False'))
-
-
-# print("DEBUG ENV VAR TEST - SERVERNAMES =", os.getenv('SERVERNAMES'))
+# Set DEBUG based on the DEBUG environment variable: it’s True if the variable (case-insensitive) is 'true'; otherwise False.
+DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
 
 # ALLOWED_HOSTS = []
 ALLOWED_HOSTS = os.getenv('SERVERNAMES').split(',')
 
 print("\n\n", ALLOWED_HOSTS,"\n\n")
 
-# Application definition
+# Enable CORS for all origins only if CORS_ORIGIN_ALLOW_ALL (case‐insensitive) is exactly 'true'; otherwise False.
+CORS_ORIGIN_ALLOW_ALL = os.getenv('CORS_ORIGIN_ALLOW_ALL', 'False').lower() == 'true'
+
+
+# Read a comma-separated list of origins, or default to empty list
+raw = os.getenv('CORS_ALLOWED_ORIGINS', '')
+
+if raw:
+    CORS_ALLOWED_ORIGINS = [origin.strip() for origin in raw.split(',')]
+else:
+    CORS_ALLOWED_ORIGINS = []
+
+
+
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -57,11 +66,6 @@ INSTALLED_APPS = [
     'chef_management.apps.ChefManagementConfig',
     'booking.apps.BookingConfig'
 ]
-
-CORS_ALLOWED_ORIGINS = [
-    "http://194.9.161.245",        # root site
-]
-CORS_ORIGIN_ALLOW_ALL = False
 
 
 MIDDLEWARE = [
