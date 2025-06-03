@@ -39,7 +39,9 @@ ALLOWED_HOSTS = os.getenv('SERVERNAMES').split(',')
 print("\n\n", ALLOWED_HOSTS,"\n\n")
 
 # Enable CORS for all origins only if CORS_ORIGIN_ALLOW_ALL (case‐insensitive) is exactly 'true'; otherwise False.
-CORS_ORIGIN_ALLOW_ALL = os.getenv('CORS_ORIGIN_ALLOW_ALL', 'False').lower() == 'true'
+raw = os.getenv('CORS_ALLOWED_ORIGINS', '').strip()
+CORS_ALLOWED_ORIGINS = [o.strip() for o in raw.splitlines() if o.strip()]
+
 
 
 # Read a comma-separated list of origins, or default to empty list
