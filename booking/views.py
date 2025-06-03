@@ -288,9 +288,9 @@ class RateDishView(APIView):
         except DateHasDish.DoesNotExist:
             return Response({'detail': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
 
-        # Prevent future ratings
-        if dhd.date_saved.date_saved >= timezone.now().date():
-            return Response({'detail': 'Can only rate past dishes'}, status=status.HTTP_400_BAD_REQUEST)
+        # # Prevent future ratings
+        # if dhd.date_saved.date_saved >= timezone.now().date():
+        #     return Response({'detail': 'Can only rate past dishes'}, status=status.HTTP_400_BAD_REQUEST)
 
         serializer = DateHasDishSerializer(dhd)
         return Response(serializer.data)
@@ -313,8 +313,16 @@ class RateDishView(APIView):
         except DateHasDish.DoesNotExist:
             return Response({'detail': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
 
-        if dhd.date_saved.date_saved >= timezone.now().date():
-            return Response({'detail': 'Can only rate past dishes'}, status=status.HTTP_400_BAD_REQUEST)
+        # Prevent future ratings (and show both dates for debugging)
+        dish_date = dhd.date_saved.date_saved
+        today    = timezone.now().date()
+        if dish_date > today:
+            msg = (
+                f"Can only rate past dishes. "
+                f"dish_date={dish_date.isoformat()}, today={today.isoformat()}"
+            )
+            return Response({'detail': msg}, status=status.HTTP_400_BAD_REQUEST)
+
 
         # Atomic update
         DateHasDish.objects.filter(pk=dhd_id).update(
@@ -358,9 +366,16 @@ class RateDishView(APIView):
         except DateHasDish.DoesNotExist:
             return Response({'detail': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
 
-        # Prevent future ratings
-        if dhd.date_saved.date_saved >= timezone.now().date():
-            return Response({'detail': 'Can only update past dishes'}, status=status.HTTP_400_BAD_REQUEST)
+        # Prevent future ratings (and show both dates for debugging)
+        dish_date = dhd.date_saved.date_saved
+        today    = timezone.now().date()
+        if dish_date > today:
+            msg = (
+                f"Can only udate rating of past dishes. "
+                f"dish_date={dish_date.isoformat()}, today={today.isoformat()}"
+            )
+            return Response({'detail': msg}, status=status.HTTP_400_BAD_REQUEST)
+
 
         # Atomic update: subtract old, add new
         DateHasDish.objects.filter(pk=dhd_id).update(
@@ -399,8 +414,16 @@ class RateDishView(APIView):
 
         if dhd.rating_count < 1:
             return Response({'detail': 'No ratings to delete'}, status=status.HTTP_400_BAD_REQUEST)
-        if dhd.date_saved.date_saved >= timezone.now().date():
-            return Response({'detail': 'Can only delete past dishes'}, status=status.HTTP_400_BAD_REQUEST)
+        # Prevent future ratings (and show both dates for debugging)
+        dish_date = dhd.date_saved.date_saved
+        today    = timezone.now().date()
+        if dish_date > today:
+            msg = (
+                f"Can only delete rating from past dishes. "
+                f"dish_date={dish_date.isoformat()}, today={today.isoformat()}"
+            )
+            return Response({'detail': msg}, status=status.HTTP_400_BAD_REQUEST)
+
 
         # Atomic removal
         DateHasDish.objects.filter(pk=dhd_id).update(
