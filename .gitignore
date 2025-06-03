@@ -40,6 +40,7 @@ __pycache__/
 *.pyc
 db.sqlite3-journal
 media/
+*.sqlite3
 
 # Secret key
 secret.key
