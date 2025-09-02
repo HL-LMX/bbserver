@@ -6,62 +6,18 @@ from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
 
-from .models import Dish, DateSaved, DateHasDish
-from .serializers import DishSerializer, DateHasDishSerializer
+from common.models import Dish, DateSaved, DateHasDish
+from common.serializers import DishSerializer, DateHasDishSerializer
 from datetime import datetime
 from django.db.models import Q, F
 from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
 from django.views.decorators.cache import never_cache
 
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
 
-
-# def get_week_of_year(date_str):
-#     date_obj = datetime.strptime(date_str, '%Y-%m-%d')
-#     return date_obj.isocalendar()[1]
-
-#  USED BY BOOKING VISITS
- 
-# def get_week_dishes(request, week=None):
-#     # Initialize current_date to None
-#     current_date = None
-
-#     # If 'week' is provided, use it; otherwise, use the current week
-#     if week is None:
-#         current_date = timezone.now().date()
-#         start_date = current_date - timezone.timedelta(days=current_date.weekday())
-#     else:
-#         current_date = timezone.now().date()
-#         start_date = current_date - timezone.timedelta(days=current_date.weekday()) + timezone.timedelta(weeks=week - current_date.isocalendar()[1])
-
-#     end_date = start_date + timezone.timedelta(days=4)  # Assuming Monday to Friday
-
-
-    
-#     # Print the current date and week, and calculated start and end dates for debugging
-#     print(f"\n\nCurrent Date: {current_date}, Week: {week}")
-#     print(f"{start_date} | {end_date}")
-
-#     # Retrieve dishes for the specified week
-#     date_has_dishes = DateHasDish.objects.filter(
-#         Q(date__gte=start_date) & Q(date__lte=end_date)
-#     )
-
-#     # Print the number of DateHasDish instances retrieved for debugging
-#     print(f"Number of DateHasDish instances: {len(date_has_dishes)}\n\n")
-
-#     dishes_info = []
-#     for date_has_dish in date_has_dishes:
-#         if date_has_dish.date:
-#             dish_serializer_data = DishSerializer(date_has_dish.dish_id).data
-#             date_saved_string = date_has_dish.date.date_saved.strftime("%Y-%m-%d")
-            
-#             dishes_info.append({
-#                 'dish': dish_serializer_data,
-#                 'date': date_saved_string
-#             })
-
-#     return JsonResponse({'dishes': dishes_info})
 
 @never_cache
 def get_week_dishes(request):
@@ -89,7 +45,7 @@ def get_week_dishes(request):
     start_date = current_date - timezone.timedelta(days=monday_offset)
     end_date = start_date + timezone.timedelta(days=4)  # Monday + 4 days = Friday
 
-    # Debug info (optional)
+    # Debug info
     print("\n\nDebugging Info:")
     print(f"Current Date Param: {date_str}")
     print(f"Start Date (Monday): {start_date}, End Date (Friday): {end_date}")
@@ -103,18 +59,28 @@ def get_week_dishes(request):
     print(f"Number of DateHasDish instances: {len(date_has_dishes)}\n")
 
     dishes_info = []
-    for date_has_dish in date_has_dishes:
+    
+    
+    
+    for dhd in date_has_dishes:
         try:
-            date_saved = date_has_dish.date_saved  # The DateSaved instance
-            dish_serializer_data = DishSerializer(date_has_dish.dish_id).data
-            date_saved_string = date_saved.date_saved.strftime("%Y-%m-%d")
+            # Base dish data
+            dish_data = DishSerializer(dhd.dish_id).data
+            # Format date string
+            date_str = dhd.date_saved.date_saved.strftime("%Y-%m-%d")
 
+            # Append all relevant fields, including rating aggregates
             dishes_info.append({
-                'dish': dish_serializer_data,
-                'date': date_saved_string
+                'date_has_dish_id': dhd.pk,
+                'dish': dish_data,
+                'date': date_str,
+                'quantity': dhd.quantity,
+                'rating_sum': dhd.rating_sum,
+                'rating_count': dhd.rating_count,
+                'average_rating': dhd.average_rating,
             })
         except ObjectDoesNotExist:
-            print(f"No DateSaved found for DateHasDish ID: {date_has_dish.dish_id}")
+            print(f"No DateSaved found for DateHasDish ID: {dhd.pk}")
 
     return JsonResponse({'dishes': dishes_info})
 
@@ -305,3 +271,165 @@ def remove_attendance(request):
             return JsonResponse({'error': str(e)}, status=500)
     else:
         return HttpResponseNotAllowed(['DELETE'])
+    
+    
+    
+class RateDishView(APIView):
+    """
+    GET  /booking/rate/?date_has_dish_id=<id>  
+    POST /booking/rate/  { date_has_dish_id, rating }
+    """
+    def get(self, request):
+        dhd_id = request.GET.get('date_has_dish_id')
+        if not dhd_id:
+            return Response({'detail': 'Missing date_has_dish_id'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            dhd = DateHasDish.objects.get(pk=dhd_id)
+        except DateHasDish.DoesNotExist:
+            return Response({'detail': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        # # Prevent future ratings
+        # if dhd.date_saved.date_saved >= timezone.now().date():
+        #     return Response({'detail': 'Can only rate past dishes'}, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = DateHasDishSerializer(dhd)
+        return Response(serializer.data)
+
+
+    def post(self, request):
+        dhd_id = request.data.get('date_has_dish_id')
+        rating = request.data.get('rating')
+        if not dhd_id or rating is None:
+            return Response({'detail': 'date_has_dish_id and rating required'},
+                            status=status.HTTP_400_BAD_REQUEST)
+        try:
+            rating = int(rating)
+        except (TypeError, ValueError):
+            return Response({'detail': 'rating must be an integer'}, status=status.HTTP_400_BAD_REQUEST)
+        if rating < 1 or rating > 5:
+            return Response({'detail': 'rating must be 1–5'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            dhd = DateHasDish.objects.get(pk=dhd_id)
+        except DateHasDish.DoesNotExist:
+            return Response({'detail': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Prevent future ratings (and show both dates for debugging)
+        dish_date = dhd.date_saved.date_saved
+        today    = timezone.now().date()
+        if dish_date > today:
+            msg = (
+                f"Can only rate past dishes. "
+                f"dish_date={dish_date.isoformat()}, today={today.isoformat()}"
+            )
+            return Response({'detail': msg}, status=status.HTTP_400_BAD_REQUEST)
+
+
+        # Atomic update
+        DateHasDish.objects.filter(pk=dhd_id).update(
+            rating_sum=F('rating_sum') + rating,
+            rating_count=F('rating_count') + 1
+        )
+        # Refresh & serialize
+        dhd.refresh_from_db()
+        serializer = DateHasDishSerializer(dhd)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+    def put(self, request):
+        """
+        Update a prior rating.
+        Expects JSON: { date_has_dish_id, old_rating, new_rating }
+        """
+        dhd_id = request.data.get('date_has_dish_id')
+        old = request.data.get('old_rating')
+        new = request.data.get('new_rating')
+
+        # Validate presence
+        if not dhd_id or old is None or new is None:
+            return Response(
+                {'detail': 'date_has_dish_id, old_rating, and new_rating are required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Validate types and ranges
+        try:
+            old = int(old)
+            new = int(new)
+        except (TypeError, ValueError):
+            return Response({'detail': 'Ratings must be integers'}, status=status.HTTP_400_BAD_REQUEST)
+        if any(r < 1 or r > 5 for r in (old, new)):
+            return Response({'detail': 'Ratings must be between 1 and 5'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Fetch
+        try:
+            dhd = DateHasDish.objects.get(pk=dhd_id)
+        except DateHasDish.DoesNotExist:
+            return Response({'detail': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Prevent future ratings (and show both dates for debugging)
+        dish_date = dhd.date_saved.date_saved
+        today    = timezone.now().date()
+        if dish_date > today:
+            msg = (
+                f"Can only udate rating of past dishes. "
+                f"dish_date={dish_date.isoformat()}, today={today.isoformat()}"
+            )
+            return Response({'detail': msg}, status=status.HTTP_400_BAD_REQUEST)
+
+
+        # Atomic update: subtract old, add new
+        DateHasDish.objects.filter(pk=dhd_id).update(
+            rating_sum=F('rating_sum') - old + new
+        )
+        dhd.refresh_from_db()
+        serializer = DateHasDishSerializer(dhd)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    
+    def delete(self, request):
+        """
+        Delete a prior rating.
+        Expects JSON: { date_has_dish_id, rating }
+        """
+        dhd_id = request.data.get('date_has_dish_id')
+        rating = request.data.get('rating')
+
+        if not dhd_id or rating is None:
+            return Response(
+                {'detail': 'date_has_dish_id and rating are required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            rating = int(rating)
+        except (TypeError, ValueError):
+            return Response({'detail': 'rating must be an integer'}, status=status.HTTP_400_BAD_REQUEST)
+        if rating < 1 or rating > 5:
+            return Response({'detail': 'rating must be 1–5'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            dhd = DateHasDish.objects.get(pk=dhd_id)
+        except DateHasDish.DoesNotExist:
+            return Response({'detail': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        if dhd.rating_count < 1:
+            return Response({'detail': 'No ratings to delete'}, status=status.HTTP_400_BAD_REQUEST)
+        # Prevent future ratings (and show both dates for debugging)
+        dish_date = dhd.date_saved.date_saved
+        today    = timezone.now().date()
+        if dish_date > today:
+            msg = (
+                f"Can only delete rating from past dishes. "
+                f"dish_date={dish_date.isoformat()}, today={today.isoformat()}"
+            )
+            return Response({'detail': msg}, status=status.HTTP_400_BAD_REQUEST)
+
+
+        # Atomic removal
+        DateHasDish.objects.filter(pk=dhd_id).update(
+            rating_sum=F('rating_sum') - rating,
+            rating_count=F('rating_count') - 1
+        )
+        dhd.refresh_from_db()
+        serializer = DateHasDishSerializer(dhd)
+        return Response(serializer.data, status=status.HTTP_200_OK)
