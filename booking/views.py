@@ -1,4 +1,4 @@
-# bookingbite/booking/views.py
+# bbserver/booking/views.py
 
 import json
 from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseNotAllowed
@@ -51,9 +51,7 @@ def get_week_dishes(request):
     print(f"Start Date (Monday): {start_date}, End Date (Friday): {end_date}")
 
     # Retrieve dishes for Monday-to-Friday of that week
-    date_has_dishes = DateHasDish.objects.filter(
-        Q(date_saved__gte=start_date) & Q(date_saved__lte=end_date)
-    )
+    date_has_dishes = DateHasDish.objects.filter(date_saved__date_saved__gte=start_date, date_saved__date_saved__lte=end_date)
 
     # Print the number of DateHasDish instances retrieved for debugging
     print(f"Number of DateHasDish instances: {len(date_has_dishes)}\n")
@@ -65,7 +63,7 @@ def get_week_dishes(request):
     for dhd in date_has_dishes:
         try:
             # Base dish data
-            dish_data = DishSerializer(dhd.dish_id).data
+            dish_data = DishSerializer(dhd.dish).data
             # Format date string
             date_str = dhd.date_saved.date_saved.strftime("%Y-%m-%d")
 
@@ -433,3 +431,5 @@ class RateDishView(APIView):
         dhd.refresh_from_db()
         serializer = DateHasDishSerializer(dhd)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+

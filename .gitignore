@@ -27,8 +27,8 @@ ENV/
 *.pem
 
 # SQLite (dev)
-db.sqlite3
-*.sqlite3
+# db.sqlite3
+# *.sqlite3
 
 # Static & media (generated at runtime)
 staticfiles/
