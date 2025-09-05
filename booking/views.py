@@ -63,7 +63,7 @@ def get_week_dishes(request):
     for dhd in date_has_dishes:
         try:
             # Base dish data
-            dish_data = DishSerializer(dhd.dish).data
+            dish_data = DishSerializer(dhd.dish_id).data
             # Format date string
             date_str = dhd.date_saved.date_saved.strftime("%Y-%m-%d")
 
