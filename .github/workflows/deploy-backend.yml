@@ -1,0 +1,37 @@
+name: Deploy BookingBite Backend
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - "**/*.py"
+      - "requirements.txt"
+      - ".github/workflows/deploy-backend.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bookingbite-backend-prod
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, windows, iis, bookingbite]   # targets your runner
+    defaults:
+      run:
+        shell: powershell
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Mirror repo to server deploy dir
+        run: |
+          if (!(Test-Path 'C:\deployments\bbserver')) { New-Item -ItemType Directory -Path 'C:\deployments\bbserver' | Out-Null }
+          robocopy "$env:GITHUB_WORKSPACE" "C:\deployments\bbserver" /MIR /XD .git node_modules .venv venv
+
+      - name: Deploy backend (venv, pip install, migrate, restart)
+        run: |
+          C:\deployments\scripts\deploy-backend.ps1 -RepoDir 'C:\deployments\bbserver' -ServiceName 'bookingbite_api'
