@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   deploy:
-    runs-on: [self-hosted, windows, iis, bookingbite]   # targets your runner
+    runs-on: [self-hosted, windows, iis, bookingbite]
     defaults:
       run:
         shell: powershell
@@ -27,9 +27,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Mirror repo to server deploy dir
+      - name: Mirror repo to server deploy dir (ROBOCOPY v3)
         shell: powershell
         run: |
+          Write-Host "USING NEW MIRROR STEP v3"
           if (!(Test-Path 'C:\deployments\bbserver')) {
             New-Item -ItemType Directory -Path 'C:\deployments\bbserver' | Out-Null
           }
@@ -46,7 +47,6 @@ jobs:
             Write-Error "Robocopy failed with code $code"
             exit $code
           }
-
 
       - name: Deploy backend (venv, pip install, migrate, restart)
         run: |
