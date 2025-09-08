@@ -19,6 +19,13 @@ concurrency:
 jobs:
   deploy:
     runs-on: [self-hosted, windows, iis, bookingbite]
+    env:
+      HTTPS_PROXY: http://proxy.hlag.com:11009
+      HTTP_PROXY: http://proxy.hlag.com:11009
+      NO_PROXY: 127.0.0.1,localhost,*.hlag.com
+      REQUESTS_CA_BUNDLE: C:\certs\hlag-zscaler-root.pem
+      SSL_CERT_FILE: C:\certs\hlag-zscaler-root.pem
+      PIP_CERT: C:\certs\hlag-zscaler-root.pem
     defaults:
       run:
         shell: powershell
