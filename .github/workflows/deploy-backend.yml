@@ -28,9 +28,25 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Mirror repo to server deploy dir
+        shell: powershell
         run: |
-          if (!(Test-Path 'C:\deployments\bbserver')) { New-Item -ItemType Directory -Path 'C:\deployments\bbserver' | Out-Null }
-          robocopy "$env:GITHUB_WORKSPACE" "C:\deployments\bbserver" /MIR /XD .git node_modules .venv venv
+          if (!(Test-Path 'C:\deployments\bbserver')) {
+            New-Item -ItemType Directory -Path 'C:\deployments\bbserver' | Out-Null
+          }
+          $src = "$env:GITHUB_WORKSPACE"
+          $dst = "C:\deployments\bbserver"
+          robocopy $src $dst /MIR /R:5 /W:2 /NFL /NDL /NP `
+            /XD .git node_modules .venv venv __pycache__ `
+            /XF *.log waitress_stdout.log waitress_stderr.log *.pyc | Out-Host
+          $code = $LASTEXITCODE
+          if ($code -lt 8) {
+            Write-Host "Robocopy exit code $code => success."
+            exit 0
+          } else {
+            Write-Error "Robocopy failed with code $code"
+            exit $code
+          }
+
 
       - name: Deploy backend (venv, pip install, migrate, restart)
         run: |
