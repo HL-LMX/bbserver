@@ -45,7 +45,7 @@ jobs:
           $dst = "C:\deployments\bbserver"
           robocopy $src $dst /MIR /R:5 /W:2 /NFL /NDL /NP `
             /XD .git node_modules .venv venv __pycache__ `
-            /XF *.log waitress_stdout.log waitress_stderr.log *.pyc | Out-Host
+            /XF *.log waitress_stdout.log waitress_stderr.log *.pyc db.sqlite3 *.sqlite3 | Out-Host
           $code = $LASTEXITCODE
           if ($code -lt 8) {
             Write-Host "Robocopy exit code $code => success."
