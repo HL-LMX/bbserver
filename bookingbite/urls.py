@@ -1,4 +1,4 @@
-# ./bookingbite/urls.py
+# bbserver/bookingbite/urls.py
 
 """
 URL configuration for bookingbite project.

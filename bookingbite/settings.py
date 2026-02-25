@@ -1,3 +1,5 @@
+# bbserver/bookingbite/settings.py
+
 """
 Django settings for bookingbite project.
 """

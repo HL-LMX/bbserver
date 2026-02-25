@@ -1,4 +1,4 @@
-# bookingbite/common/serializers.py
+# bbserver/common/serializers.py
 
 from rest_framework import serializers
 from common.models import DateSaved, DateHasDish, Dish
@@ -11,7 +11,8 @@ class DateSerializer(serializers.ModelSerializer):
 class DishSerializer(serializers.ModelSerializer):
     class Meta:
         model = Dish
-        fields = ['dish_id', 'dish_name', 'dish_description', 'dish_type', 'dish_calories', 'light_healthy', 'sugar_free']
+        fields = ['dish_id', 'dish_name', 'dish_description', 'dish_type', 'dish_calories', 'light_healthy', 'sugar_free', 'created_at', 'updated_at']
+        read_only_fields = ['created_at', 'updated_at']
         extra_kwargs = {
             'dish_name': {'required': True},
             'dish_type': {'required': True},

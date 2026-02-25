@@ -1,4 +1,4 @@
-#bookingbite/menu_management/urls.py
+#bbserver/menu_management/urls.py
 
 from django.urls import path
 from . import views

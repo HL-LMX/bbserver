@@ -1,4 +1,4 @@
-# Bookingbite/common/models.py
+# bbserver/common/models.py
 
 from django.db import models
 
@@ -11,6 +11,8 @@ class Dish(models.Model):
     dish_calories = models.IntegerField(null=True)
     light_healthy = models.BooleanField(null=True)
     sugar_free = models.BooleanField(null=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True)
 
     class Meta:
         db_table = 'dish'
